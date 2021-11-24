@@ -23,16 +23,11 @@ const unzipper = require("unzipper"),
  */
 
 const unzip = (pathIn, pathOut) => {
-  
-  fs.createReadStream(pathIn)
+  return fs.createReadStream(pathIn)
   .pipe(unzipper.Extract({ path: pathOut }))
-  .pipe(unzipper.Parse())
-  .on('entry', entry => entry.autodrain())
   .promise()
-  .then(() => console.log('done'), e => console.log('error',e));
-  
-};
 
+};
 
 /**
  * Description: read all the png files from given directory and return Promise containing array of each png file path
@@ -41,7 +36,19 @@ const unzip = (pathIn, pathOut) => {
  * @return {promise}
  */
 const readDir = (dir) => {
-
+  return new Promise((resolve, reject) => {
+    let paths = []
+    fs.readdir(dir, (err, files) => {
+      if (err) {
+        reject(err)
+      } else {
+        files.forEach(file => {
+          paths.push(path.join("/",dir,file))
+        })
+        resolve(paths)
+      }
+    }) 
+  })
 };
 
 /**
@@ -54,7 +61,7 @@ const readDir = (dir) => {
  */
 const grayScale = (pathIn, pathOut) => {
 
-  fs.createReadStream("in.png")
+  fs.createReadStream(pathIn)
   .pipe(
     new PNG({
       filterType: 4,
@@ -64,18 +71,18 @@ const grayScale = (pathIn, pathOut) => {
     for (var y = 0; y < this.height; y++) {
       for (var x = 0; x < this.width; x++) {
         var idx = (this.width * y + x) << 2;
- 
+        let total = (this.data[idx] + this.data[idx+1] + this.data[idx+2]) / 3
         // invert color
-        this.data[idx] = 255 - this.data[idx];
-        this.data[idx + 1] = 255 - this.data[idx + 1];
-        this.data[idx + 2] = 255 - this.data[idx + 2];
+        this.data[idx] = total;
+        this.data[idx + 1] = total;
+        this.data[idx + 2] = total;
  
         // and reduce opacity
         this.data[idx + 3] = this.data[idx + 3] >> 1;
       }
     }
- 
-    this.pack().pipe(fs.createWriteStream("out.png"));
+    let num = Math.floor((Math.random() * 100000) + 1);
+    this.pack().pipe(fs.createWriteStream(`${pathOut}/out_${num}.png`));
   });
 };
 

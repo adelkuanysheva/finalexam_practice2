@@ -14,7 +14,10 @@ const IOhandler = require("./IOhandler"),
   pathProcessed = `${__dirname}/grayscaled`;
 
 
-  IOhandler.unzip()
-  .then(() => IOhandler.readDir())
-  .then((files) => IOhandler.grayScale())
+  IOhandler.unzip(zipFilePath, pathUnzipped)
+  .then(() => IOhandler.readDir(pathUnzipped))
+  .then((files) => {
+    files = files.filter(function (str) { return str.includes(".png"); })
+    files.forEach(file => { IOhandler.grayScale(file, pathProcessed)})
+  })
   .catch((err) => console.log(err))
